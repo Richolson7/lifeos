@@ -199,10 +199,29 @@ main{padding:20px 16px 60px;max-width:760px;margin:0 auto}
 .timeline-desc{font-size:13px;color:var(--text)}
 .timeline-target{font-family:var(--serif);font-weight:600;color:var(--gold);font-size:14px;text-align:right}
 .macro-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:520px){.macro-grid{grid-template-columns:1fr 1fr}}
 .macro-input{background:var(--bg-deep);border:1px solid var(--border);border-radius:3px;padding:10px 8px;text-align:center}
 .macro-input label{display:block;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-faint);font-weight:600;margin-bottom:6px}
-.macro-input input{width:100%;background:transparent;border:none;color:var(--text);font-family:var(--serif);font-size:18px;text-align:center;font-weight:600}
+.macro-input input{width:100%;background:transparent;border:none;color:var(--text);font-family:var(--serif);font-size:20px;text-align:center;font-weight:600}
 .macro-input input:focus{outline:none}
+.macro-input input.macro-bad{box-shadow:inset 0 0 0 1px var(--red)}
+.macro-date{color-scheme:dark;font-size:16px}
+.macro-weight{font-size:16px}
+.form-input.macro-bad,.form-textarea.macro-bad{border-color:var(--red)}
+.macro-label-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.macro-target-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#tdTargetBox{display:flex;flex-direction:column;gap:8px}
+#tdTargetBox[hidden]{display:none !important}
+.macro-summary{display:flex;flex-direction:column;gap:6px}
+.macro-hint{font-size:12px;color:var(--text-dim);line-height:1.4}
+.macro-remain-top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--text-dim)}
+.macro-bar{height:6px;background:var(--bg-deep);border-radius:3px;overflow:hidden;margin-top:4px}
+.macro-bar>span{display:block;height:100%;background:var(--gold)}
+.macro-bar.over>span{background:var(--red)}
+.macro-error{display:none;color:var(--red);font-size:13px;line-height:1.4;background:rgba(199,74,58,0.08);border:1px solid var(--red);border-radius:3px;padding:10px 12px}
+.macro-error.show{display:block}
+.history-main{min-width:0;flex:1}
+.history-macros{font-size:12px;color:var(--text-dim);margin-top:3px;line-height:1.35}
 .modal-bg{position:fixed;inset:0;background:rgba(7,9,15,0.85);display:none;align-items:flex-start;justify-content:center;z-index:200;padding:20px;overflow-y:auto}
 .modal-bg.show{display:flex}
 .modal{background:var(--bg-elev);border:1px solid var(--gold-dim);border-radius:6px;padding:24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;margin:auto}
@@ -1305,17 +1324,305 @@ ${overdueTasks?`<div class="section"><div class="section-label"><span>🔥 Overd
 
 <div class="section"><div class="section-label"><span>✨ Lit-Up Check</span><span class="meta">Daily joy signal</span></div><div class="card"><p style="color:var(--text-dim);font-size:12px;margin-bottom:12px;font-style:italic">Life includes joy, play, laughter, things that light you up. If those disappear, the system is failing.</p><div class="form-grid"><div class="form-field"><div class="form-label">Did anything light you up today?</div><div class="yn-group"><button type="button" class="yn-btn ${(store.joyLog||{})[todayStr()]&&(store.joyLog||{})[todayStr()].litUp===true?'active':''}" onclick="setLitUp(true)">YES</button><button type="button" class="yn-btn no ${(store.joyLog||{})[todayStr()]&&(store.joyLog||{})[todayStr()].litUp===false?'active':''}" onclick="setLitUp(false)">NO</button></div></div><div class="form-field"><div class="form-label">One word for how alive you felt (numb / distracted / present / lit up / on fire / grateful / ...)</div><input type="text" class="form-input" id="litOneWord" value="${escapeHTML(((store.joyLog||{})[todayStr()]||{}).oneWord||'')}"></div><div class="form-field"><div class="form-label">What was it? (if yes)</div><input type="text" class="form-input" id="litActivity" placeholder="guitar · walk with kali · silly moment with the girls · sunset..." value="${escapeHTML(((store.joyLog||{})[todayStr()]||{}).activity||'')}"></div><button class="btn full" onclick="saveLitUp()">SAVE LIT-UP</button></div></div></div>
 
-<div class="section"><div class="section-label"><span>🍽️ Macros & Body</span></div><div class="card"><div class="form-grid"><div class="form-field"><div class="form-label">Macros</div><div class="macro-grid"><div class="macro-input"><label>Cals</label><input type="number" id="tdCal" value="${todayLog.calories||''}"></div><div class="macro-input"><label>Protein</label><input type="number" id="tdPro" value="${todayLog.protein||''}"></div><div class="macro-input"><label>Carbs</label><input type="number" id="tdCarb" value="${todayLog.carbs||''}"></div><div class="macro-input"><label>Fat</label><input type="number" id="tdFat" value="${todayLog.fat||''}"></div></div></div><div class="form-field"><div class="form-label">Weight</div><input type="number" step="0.1" class="form-input" id="tdWt" value="${todayLog.weight||''}"></div><div class="form-field"><div class="form-label">Notes (yoga / boxing / hike / sauna / skierg)</div><textarea class="form-textarea" id="tdNotes">${escapeHTML(todayLog.notes||'')}</textarea></div><button class="btn full" onclick="saveTodayMacros()">SAVE MACROS</button></div></div></div>
+${macroCardHTML(todayLog, today)}
 `;
 
 document.querySelectorAll('[data-tdk]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.tdk;document.querySelectorAll(`[data-tdk="${k}"]`).forEach(x=>x.classList.remove('active'));b.classList.add('active')}));
+bindMacroInputs('today');
+refreshMacroSummary('today');
 }
 
 window.saveTodayChecks=()=>{const today=todayStr();const checks=store.dailyChecks||[];if(!store.daily[today])store.daily[today]={date:today};const d=store.daily[today];checks.forEach(c=>{const a=document.querySelector(`[data-tdk="${c.id}"].active`);if(a)d[c.id]=a.dataset.val==='true'});const yes=checks.filter(c=>d[c.id]===true).length;d.score=checks.length?Math.round(yes*(20/checks.length)):0;saveAll();renderToday();showToast("DAILY GOALS SAVED")};
 window.toggleTodayBig3=(cat,i)=>{const wk=getWeekKey();if(!store.big3[wk])store.big3[wk]={physical:[{text:'',done:false},{text:'',done:false},{text:'',done:false}],personal:[{text:'',done:false},{text:'',done:false},{text:'',done:false}],professional:[{text:'',done:false},{text:'',done:false},{text:'',done:false}]};store.big3[wk][cat][i].done=!store.big3[wk][cat][i].done;saveAll();renderToday()};
 window.saveTodayBig3=()=>{const wk=getWeekKey();if(!store.big3[wk])store.big3[wk]={physical:[{text:'',done:false},{text:'',done:false},{text:'',done:false}],personal:[{text:'',done:false},{text:'',done:false},{text:'',done:false}],professional:[{text:'',done:false},{text:'',done:false},{text:'',done:false}]};document.querySelectorAll('[data-tb3-cat]').forEach(input=>{const cat=input.dataset.tb3Cat;const i=parseInt(input.dataset.tb3I);store.big3[wk][cat][i].text=input.value});saveAll();showToast("BIG 3 SAVED")};
 window.saveTodayJournal=()=>{const today=todayStr();if(!store.dailyJournal)store.dailyJournal={};store.dailyJournal[today]=document.getElementById('todayJournalText').value;saveAll();showToast("JOURNAL SAVED")};
-window.saveTodayMacros=()=>{const today=todayStr();if(!store.daily[today])store.daily[today]={date:today};const d=store.daily[today];d.calories=parseFloat(document.getElementById('tdCal').value)||null;d.protein=parseFloat(document.getElementById('tdPro').value)||null;d.carbs=parseFloat(document.getElementById('tdCarb').value)||null;d.fat=parseFloat(document.getElementById('tdFat').value)||null;d.weight=parseFloat(document.getElementById('tdWt').value)||null;d.notes=document.getElementById('tdNotes').value;saveAll();showToast("MACROS SAVED")};
+// ============ MACRO TRACKER ============
+const MACRO_NUM_SPECS=[
+  {key:'calories',label:'Calories',unit:'kcal',min:0,max:10000},
+  {key:'protein',label:'Protein',unit:'g',min:0,max:500},
+  {key:'carbs',label:'Carbs',unit:'g',min:0,max:1500},
+  {key:'fat',label:'Fat',unit:'g',min:0,max:400}
+];
+const MACRO_WEIGHT_SPEC={key:'weight',label:'Weight',unit:'lb',min:50,max:700};
+const MACRO_TARGET_SPECS=MACRO_NUM_SPECS.map(s=>Object.assign({},s,{min:1}));
+const TODAY_MACRO_IDS={which:'today',date:'tdMacroDate',calories:'tdCal',protein:'tdPro',carbs:'tdCarb',fat:'tdFat',weight:'tdWt',notes:'tdNotes',error:'tdMacroError',summary:'tdMacroSummary',save:'tdSaveMacros'};
+const FORM_MACRO_IDS={which:'form',date:'logDate',calories:'caloriesInput',protein:'proteinInput',carbs:'carbsInput',fat:'fatInput',weight:'weightInput',notes:'notesInput',error:'formMacroError',summary:'formMacroSummary',save:'formSaveDay'};
+
+function macroFmt(n){
+  const x=Math.round(Number(n)*10)/10;
+  if(!isFinite(x))return '';
+  return Math.abs(x-Math.round(x))<0.001?String(Math.round(x)):x.toFixed(1);
+}
+function macroInputValue(n){
+  if(n==null||n==='')return '';
+  return macroFmt(n);
+}
+function macroDateLabel(iso){
+  const y=+iso.slice(0,4),m=+iso.slice(5,7),d=+iso.slice(8,10);
+  return new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+function parseMacroDate(raw,today){
+  const s=String(raw==null?'':raw).trim();
+  const now=today||todayStr();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return {error:'Choose a real day to log.'};
+  const y=+s.slice(0,4),m=+s.slice(5,7),d=+s.slice(8,10);
+  const dt=new Date(y,m-1,d);
+  if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return {error:'That date is not a real calendar day.'};
+  if(y<2000)return {error:'Pick a date from 2000 onward.'};
+  if(s>now)return {error:"You can't log a future day."};
+  return {value:s};
+}
+function parseMacroNumber(raw,spec){
+  let s=String(raw==null?'':raw).trim();
+  if(s==='')return {empty:true,value:null};
+  if(s[0]==='-')return {error:spec.label+" can't be negative."};
+  if(s.includes(',')){
+    if(!/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s))return {error:spec.label+' must be a plain number.'};
+    s=s.replace(/,/g,'');
+  }
+  if(!/^\d+(\.\d+)?$/.test(s))return {error:spec.label+' must be a plain number, like '+ (spec.key==='calories'?'2200':'180') +' or '+ (spec.key==='calories'?'2200.5':'180.5') +'.'};
+  const dec=s.split('.')[1];
+  if(dec&&dec.length>1)return {error:spec.label+' can use at most one decimal place.'};
+  const n=Math.round(parseFloat(s)*10)/10;
+  if(!isFinite(n))return {error:spec.label+' must be a plain number.'};
+  if(n<spec.min)return {error:spec.label+' must be at least '+spec.min+' '+spec.unit+'.'};
+  if(n>spec.max)return {error:spec.label+' is above '+spec.max+' '+spec.unit+'. Check for a typo.'};
+  return {value:n};
+}
+function macroMismatch(calories,protein,carbs,fat){
+  if([calories,protein,carbs,fat].some(v=>v==null))return null;
+  const expected=protein*4+carbs*4+fat*9;
+  const diff=Math.abs(calories-expected);
+  const tol=Math.max(200,expected*0.25);
+  if(diff<=tol)return null;
+  return {expected:Math.round(expected),calories:calories};
+}
+function macroTargets(){
+  const t=store.macroTargets;
+  if(!t||typeof t!=='object'||Array.isArray(t))return {calories:null,protein:null,carbs:null,fat:null};
+  return t;
+}
+function formatMacroHistory(log){
+  if(!log)return '';
+  const bits=[];
+  if(log.calories!=null&&log.calories!=='')bits.push(Number(log.calories).toLocaleString()+' kcal');
+  if(log.protein!=null&&log.protein!=='')bits.push('P '+macroFmt(log.protein));
+  if(log.carbs!=null&&log.carbs!=='')bits.push('C '+macroFmt(log.carbs));
+  if(log.fat!=null&&log.fat!=='')bits.push('F '+macroFmt(log.fat));
+  if(log.weight!=null&&log.weight!=='')bits.push(macroFmt(log.weight)+' lb');
+  return bits.join(' · ');
+}
+function macroIds(which){return which==='form'?FORM_MACRO_IDS:TODAY_MACRO_IDS}
+function stampMacroDateMax(id){
+  const el=document.getElementById(id);
+  if(el)el.max=todayStr();
+}
+function markMacroField(fieldId){
+  document.querySelectorAll('.macro-bad').forEach(el=>el.classList.remove('macro-bad'));
+  if(!fieldId)return;
+  const el=document.getElementById(fieldId);
+  if(el)el.classList.add('macro-bad');
+}
+function showMacroError(id,msg,fieldId){
+  markMacroField(fieldId||'');
+  const el=document.getElementById(id);
+  if(!el){if(msg)alert(msg);return}
+  el.textContent=msg||'';
+  el.classList.toggle('show',!!msg);
+  if(msg)el.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function commitMacros(errorId,mutate){
+  const dailySnap=JSON.stringify(store.daily||{});
+  const targetSnap=JSON.stringify(store.macroTargets==null?null:store.macroTargets);
+  mutate();
+  try{saveAll();return true}
+  catch(e){
+    store.daily=JSON.parse(dailySnap);
+    if(targetSnap==='null')delete store.macroTargets;
+    else store.macroTargets=JSON.parse(targetSnap);
+    showMacroError(errorId,"This device couldn't store the log. Export a backup from History, then try again.");
+    return false;
+  }
+}
+function macroFieldInput(id,label,value){
+  return `<div class="macro-input"><label for="${id}">${label}</label><input type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" id="${id}" aria-label="${label}" value="${value}"></div>`;
+}
+function readMacroEntry(ids){
+  const dateEl=document.getElementById(ids.date);
+  const dateParsed=parseMacroDate(dateEl?dateEl.value:'');
+  if(dateParsed.error)return {error:dateParsed.error,field:ids.date};
+  const values={};
+  for(const spec of MACRO_NUM_SPECS){
+    const el=document.getElementById(ids[spec.key]);
+    if(!el)return {error:'Reopen this screen and try again.',field:''};
+    const parsed=parseMacroNumber(el.value,spec);
+    if(parsed.error)return {error:parsed.error,field:ids[spec.key]};
+    values[spec.key]=parsed.value;
+  }
+  const wEl=document.getElementById(ids.weight);
+  if(!wEl)return {error:'Reopen this screen and try again.',field:''};
+  const w=parseMacroNumber(wEl.value,MACRO_WEIGHT_SPEC);
+  if(w.error)return {error:w.error,field:ids.weight};
+  values.weight=w.value;
+  const notesEl=document.getElementById(ids.notes);
+  const notes=notesEl?notesEl.value.replace(/\r\n/g,'\n'):'';
+  if(notes.length>1000)return {error:'Notes are limited to 1,000 characters.',field:ids.notes};
+  const mismatch=macroMismatch(values.calories,values.protein,values.carbs,values.fat);
+  if(mismatch){
+    const btn=document.getElementById(ids.save);
+    const fp=[dateParsed.value,values.calories,values.protein,values.carbs,values.fat].join('|');
+    if(!btn||btn.dataset.ack!==fp){
+      if(btn)btn.dataset.ack=fp;
+      return {error:'Calories are '+macroFmt(mismatch.calories)+', but protein, carbs, and fat add up to about '+mismatch.expected.toLocaleString()+'. Tap save again if these numbers are right.',field:ids.calories};
+    }
+  }
+  return {date:dateParsed.value,values:values,notes:notes};
+}
+function fillMacroInputs(ids,log){
+  MACRO_NUM_SPECS.forEach(spec=>{
+    const el=document.getElementById(ids[spec.key]);
+    if(el)el.value=macroInputValue(log[spec.key]);
+  });
+  const w=document.getElementById(ids.weight);
+  if(w)w.value=macroInputValue(log.weight);
+  const n=document.getElementById(ids.notes);
+  if(n)n.value=log.notes||'';
+  const btn=document.getElementById(ids.save);
+  if(btn)btn.dataset.ack='';
+}
+function bindMacroInputs(which){
+  const ids=macroIds(which);
+  MACRO_NUM_SPECS.forEach(spec=>{
+    const el=document.getElementById(ids[spec.key]);
+    if(!el)return;
+    el.addEventListener('input',()=>{
+      const btn=document.getElementById(ids.save);
+      if(btn)btn.dataset.ack='';
+      showMacroError(ids.error,'');
+      refreshMacroSummary(which);
+    });
+  });
+}
+function refreshMacroSummary(which){
+  const ids=macroIds(which);
+  const box=document.getElementById(ids.summary);
+  if(!box)return;
+  const values={};
+  MACRO_NUM_SPECS.forEach(spec=>{
+    const el=document.getElementById(ids[spec.key]);
+    const parsed=el?parseMacroNumber(el.value,spec):{empty:true};
+    values[spec.key]=parsed.error||parsed.empty?null:parsed.value;
+  });
+  const targets=macroTargets();
+  const anyTarget=MACRO_NUM_SPECS.some(spec=>targets[spec.key]!=null&&targets[spec.key]!=='');
+  if(!anyTarget){box.innerHTML='<div class="macro-hint">Set daily targets to see what is left.</div>';return}
+  box.innerHTML=MACRO_NUM_SPECS.map(spec=>{
+    const goal=targets[spec.key];
+    if(goal==null||goal==='')return '';
+    const have=values[spec.key];
+    const goalN=Number(goal);
+    let detail='not logged';
+    if(have!=null){
+      const gap=Math.round((goalN-have)*10)/10;
+      if(Math.abs(gap)<0.05)detail='on target';
+      else if(gap<0)detail=macroFmt(-gap)+' '+spec.unit+' over';
+      else detail=macroFmt(gap)+' '+spec.unit+' left';
+    }
+    const pct=have==null||!(goalN>0)?0:Math.max(0,Math.min(100,Math.round(have/goalN*100)));
+    const over=have!=null&&have>goalN;
+    const logged=have==null?'—':macroFmt(have);
+    return `<div class="macro-remain"><div class="macro-remain-top"><span>${spec.label}</span><span>${logged} / ${macroFmt(goalN)} ${spec.unit} · ${detail}</span></div><div class="macro-bar${over?' over':''}"><span style="width:${over?100:pct}%"></span></div></div>`;
+  }).join('');
+}
+function writeMacroNumbers(date,values,notes){
+  if(!store.daily[date])store.daily[date]={date:date};
+  const d=store.daily[date];
+  d.date=date;
+  MACRO_NUM_SPECS.forEach(spec=>{d[spec.key]=values[spec.key]});
+  d.weight=values.weight;
+  d.notes=notes;
+  return d;
+}
+function macroCardHTML(log,date){
+  const targets=macroTargets();
+  return `<div class="section"><div class="section-label"><span>🍽️ Macros & Body</span><span class="meta">Daily totals</span></div><div class="card"><div class="form-grid"><div class="form-field"><div class="form-label">Day</div><input type="date" class="form-input macro-date" id="tdMacroDate" min="2000-01-01" max="${todayStr()}" value="${date}" onfocus="stampMacroDateMax('tdMacroDate')" onchange="onTodayMacroDateChange()"></div><div class="form-field"><div class="form-label">Macros</div><div class="macro-grid">${macroFieldInput('tdCal','Cals',macroInputValue(log.calories))}${macroFieldInput('tdPro','Protein',macroInputValue(log.protein))}${macroFieldInput('tdCarb','Carbs',macroInputValue(log.carbs))}${macroFieldInput('tdFat','Fat',macroInputValue(log.fat))}</div></div><div class="form-field"><div class="form-label">Weight (lb)</div><input type="text" inputmode="decimal" autocomplete="off" class="form-input macro-weight" id="tdWt" aria-label="Weight in pounds" value="${macroInputValue(log.weight)}"></div><div class="form-field"><div class="form-label">Notes (yoga / boxing / hike / sauna / skierg)</div><textarea class="form-textarea" id="tdNotes" maxlength="1000">${escapeHTML(log.notes||'')}</textarea></div><div class="form-field"><div class="form-label macro-label-row"><span>Daily targets</span><button type="button" class="btn outline sm" onclick="toggleMacroTargets()">Edit</button></div><div id="tdTargetBox" hidden><div class="macro-target-grid">${macroFieldInput('tdTcalories','Cals',macroInputValue(targets.calories))}${macroFieldInput('tdTprotein','Protein',macroInputValue(targets.protein))}${macroFieldInput('tdTcarbs','Carbs',macroInputValue(targets.carbs))}${macroFieldInput('tdTfat','Fat',macroInputValue(targets.fat))}</div><button type="button" class="btn outline full" onclick="saveMacroTargets()">Save targets</button></div></div><div id="tdMacroSummary" class="macro-summary"></div><div id="tdMacroError" class="macro-error" role="alert" aria-live="polite"></div><button type="button" class="btn full" id="tdSaveMacros" onclick="saveTodayMacros()">Save macros</button><button type="button" class="btn outline sm" onclick="clearMacroDay('today')">Clear numbers</button></div></div></div>`;
+}
+function onTodayMacroDateChange(){
+  const el=document.getElementById('tdMacroDate');
+  const parsed=parseMacroDate(el.value);
+  if(parsed.error){
+    const msg=parsed.error;
+    const today=todayStr();
+    el.value=today;
+    fillMacroInputs(TODAY_MACRO_IDS,store.daily[today]||{});
+    showMacroError('tdMacroError',msg,'tdMacroDate');
+    refreshMacroSummary('today');
+    return;
+  }
+  fillMacroInputs(TODAY_MACRO_IDS,store.daily[parsed.value]||{});
+  showMacroError('tdMacroError','');
+  refreshMacroSummary('today');
+}
+function blankWouldWipeNumbers(date,values){
+  const prev=store.daily[date]||{};
+  const keys=MACRO_NUM_SPECS.map(spec=>spec.key).concat(['weight']);
+  const had=keys.some(k=>prev[k]!=null&&prev[k]!=='');
+  const now=keys.every(k=>values[k]==null);
+  return had&&now;
+}
+window.saveTodayMacros=function(){
+  const read=readMacroEntry(TODAY_MACRO_IDS);
+  if(read.error){showMacroError(TODAY_MACRO_IDS.error,read.error,read.field);return}
+  const anyNum=MACRO_NUM_SPECS.some(spec=>read.values[spec.key]!=null)||read.values.weight!=null;
+  if(!anyNum&&!String(read.notes||'').trim()){showMacroError(TODAY_MACRO_IDS.error,'Enter at least one number, or a note.','tdCal');return}
+  if(blankWouldWipeNumbers(read.date,read.values)){showMacroError(TODAY_MACRO_IDS.error,'All numbers are blank, so this day was left as it is. Enter a number, or tap Clear numbers to erase them.','tdCal');return}
+  showMacroError(TODAY_MACRO_IDS.error,'');
+  if(!commitMacros(TODAY_MACRO_IDS.error,()=>writeMacroNumbers(read.date,read.values,read.notes)))return;
+  showToast(read.date===todayStr()?'MACROS SAVED':'SAVED · '+macroDateLabel(read.date).toUpperCase());
+  refreshMacroSummary('today');
+};
+window.toggleMacroTargets=function(){
+  const box=document.getElementById('tdTargetBox');
+  if(box)box.hidden=!box.hidden;
+};
+window.saveMacroTargets=function(){
+  const next={};
+  const idByKey={calories:'tdTcalories',protein:'tdTprotein',carbs:'tdTcarbs',fat:'tdTfat'};
+  for(const spec of MACRO_TARGET_SPECS){
+    const el=document.getElementById(idByKey[spec.key]);
+    const parsed=parseMacroNumber(el?el.value:'',spec);
+    if(parsed.error){showMacroError('tdMacroError',parsed.error,idByKey[spec.key]);return}
+    next[spec.key]=parsed.value;
+  }
+  if(!commitMacros('tdMacroError',()=>{store.macroTargets=next}))return;
+  showMacroError('tdMacroError','');
+  showToast('TARGETS SAVED');
+  refreshMacroSummary('today');
+  if(document.getElementById('formMacroSummary'))refreshMacroSummary('form');
+};
+window.clearMacroDay=function(which){
+  const ids=macroIds(which);
+  const el=document.getElementById(ids.date);
+  const parsed=parseMacroDate(el?el.value:'');
+  if(parsed.error){showMacroError(ids.error,parsed.error,ids.date);return}
+  if(!confirm('Clear calories, protein, carbs, fat, and weight for '+macroDateLabel(parsed.value)+'? Notes and yes/no answers stay.'))return;
+  const notesEl=document.getElementById(ids.notes);
+  const pendingNotes=notesEl?notesEl.value:'';
+  const saved=commitMacros(ids.error,()=>{
+    if(!store.daily[parsed.value])store.daily[parsed.value]={date:parsed.value};
+    const row=store.daily[parsed.value];
+    row.date=parsed.value;
+    MACRO_NUM_SPECS.forEach(spec=>{row[spec.key]=null});
+    row.weight=null;
+  });
+  if(!saved)return;
+  const d=store.daily[parsed.value];
+  fillMacroInputs(ids,d);
+  if(notesEl)notesEl.value=pendingNotes;
+  showMacroError(ids.error,'');
+  refreshMacroSummary(which);
+  showToast('NUMBERS CLEARED');
+};
 window.setLitUp=(val)=>{const today=todayStr();if(!store.joyLog)store.joyLog={};if(!store.joyLog[today])store.joyLog[today]={};store.joyLog[today].litUp=val;saveAll();renderToday()};
 window.saveLitUp=()=>{const today=todayStr();if(!store.joyLog)store.joyLog={};if(!store.joyLog[today])store.joyLog[today]={};const w=document.getElementById('litOneWord');const a=document.getElementById('litActivity');if(w)store.joyLog[today].oneWord=w.value;if(a)store.joyLog[today].activity=a.value;saveAll();showToast("LIT-UP SAVED")};
 
@@ -2557,8 +2864,32 @@ window.saveHyroxSession=()=>{const t=document.querySelector('[data-htype].active
 // ============ FORMS HUB ============
 window.openDailyLog=()=>{document.querySelector('[data-view="forms"]').click();setTimeout(renderDailyLogForm,100)};
 function renderFormsHub(){document.getElementById('formContainer').innerHTML=`<div class="section"><div class="section-label"><span>Forms</span></div><div style="display:flex;flex-direction:column;gap:10px"><button class="btn full lg elite" onclick="renderLifeOpMeetingForm()">⌁ LIFE OP MEETING (Sunday)</button><button class="btn full lg" onclick="renderDailyLogForm()">DAILY LOG</button><button class="btn full lg outline" onclick="renderCEOForm()">CEO SELF-CHECK</button><button class="btn full lg outline" onclick="renderFitnessForm()">FITNESS TRACKER</button><button class="btn full lg outline" onclick="renderBillionaireForm()">BILLIONAIRE REVIEW</button><button class="btn full lg outline" onclick="renderWeeklyForm()">QUICK WEEKLY</button></div></div>`}
-function renderDailyLogForm(){const today=todayStr();const ex=store.daily[today]||{};const checks=store.dailyChecks||[{id:'am',label:'AM Workout done?'},{id:'pm',label:'PM Workout done?'},{id:'macros',label:'Macros hit?'},{id:'sleep',label:'Sleep ≥7 hrs?'},{id:'steps',label:'12K+ steps?'},{id:'big3',label:'Big 3 done?'},{id:'top3',label:'Top 3 moved?'},{id:'faith',label:'Faith/Family time?'}];document.getElementById('formContainer').innerHTML=`<div class="section"><div class="section-label"><span>Daily Log</span><span class="meta">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})}</span></div><div class="card elev"><form class="form-grid">${checks.map(c=>`<div class="form-field"><div class="form-label">${escapeHTML(c.label)}</div><div class="yn-group"><button type="button" class="yn-btn ${ex[c.id]===true?'active':''}" data-key="${c.id}" data-val="true">YES</button><button type="button" class="yn-btn no ${ex[c.id]===false?'active':''}" data-key="${c.id}" data-val="false">NO</button></div></div>`).join('')}<div class="form-field"><div class="form-label">Macros</div><div class="macro-grid"><div class="macro-input"><label>Cals</label><input type="number" id="caloriesInput" value="${ex.calories||''}"></div><div class="macro-input"><label>Protein</label><input type="number" id="proteinInput" value="${ex.protein||''}"></div><div class="macro-input"><label>Carbs</label><input type="number" id="carbsInput" value="${ex.carbs||''}"></div><div class="macro-input"><label>Fat</label><input type="number" id="fatInput" value="${ex.fat||''}"></div></div></div><div class="form-field"><div class="form-label">Weight</div><input type="number" step="0.1" class="form-input" id="weightInput" value="${ex.weight||''}"></div><div class="form-field"><div class="form-label">Notes (yoga / boxing / hike miles / sauna / skierg)</div><textarea class="form-textarea" id="notesInput">${escapeHTML(ex.notes||'')}</textarea></div><button type="button" class="btn full lg" onclick="saveDailyLog()">SAVE</button><button type="button" class="btn full outline" onclick="renderFormsHub()">CANCEL</button></form></div></div>`;document.querySelectorAll('.yn-btn').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.key;document.querySelectorAll(`.yn-btn[data-key="${k}"]`).forEach(x=>x.classList.remove('active'));b.classList.add('active')}))}
-window.saveDailyLog=()=>{const today=todayStr();const checks=store.dailyChecks||[];const d={date:today};checks.forEach(c=>{const a=document.querySelector(`.yn-btn[data-key="${c.id}"].active`);d[c.id]=a?a.dataset.val==='true':null});d.weight=parseFloat(document.getElementById('weightInput').value)||null;d.calories=parseFloat(document.getElementById('caloriesInput').value)||null;d.protein=parseFloat(document.getElementById('proteinInput').value)||null;d.carbs=parseFloat(document.getElementById('carbsInput').value)||null;d.fat=parseFloat(document.getElementById('fatInput').value)||null;d.notes=document.getElementById('notesInput').value;const yes=checks.filter(c=>d[c.id]===true).length;d.score=checks.length?Math.round(yes*(20/checks.length)):0;store.daily[today]=d;saveAll();showToast("DAY LOGGED");setTimeout(()=>document.querySelector('[data-view="home"]').click(),600)};
+function renderDailyLogForm(date){const parsed=parseMacroDate(date||todayStr());const day=parsed.error?todayStr():parsed.value;const ex=store.daily[day]||{};const checks=store.dailyChecks||[{id:'am',label:'AM Workout done?'},{id:'pm',label:'PM Workout done?'},{id:'macros',label:'Macros hit?'},{id:'sleep',label:'Sleep ≥7 hrs?'},{id:'steps',label:'12K+ steps?'},{id:'big3',label:'Big 3 done?'},{id:'top3',label:'Top 3 moved?'},{id:'faith',label:'Faith/Family time?'}];document.getElementById('formContainer').innerHTML=`<div class="section"><div class="section-label"><span>Daily Log</span><span class="meta">${macroDateLabel(day)}</span></div><div class="card elev"><form class="form-grid" onsubmit="event.preventDefault();saveDailyLog();return false"><div class="form-field"><div class="form-label">Day</div><input type="date" class="form-input macro-date" id="logDate" min="2000-01-01" max="${todayStr()}" value="${day}" onfocus="stampMacroDateMax('logDate')" onchange="onDailyLogDateChange()"></div>${checks.map(c=>`<div class="form-field"><div class="form-label">${escapeHTML(c.label)}</div><div class="yn-group"><button type="button" class="yn-btn ${ex[c.id]===true?'active':''}" data-key="${c.id}" data-val="true">YES</button><button type="button" class="yn-btn no ${ex[c.id]===false?'active':''}" data-key="${c.id}" data-val="false">NO</button></div></div>`).join('')}<div class="form-field"><div class="form-label">Macros</div><div class="macro-grid">${macroFieldInput('caloriesInput','Cals',macroInputValue(ex.calories))}${macroFieldInput('proteinInput','Protein',macroInputValue(ex.protein))}${macroFieldInput('carbsInput','Carbs',macroInputValue(ex.carbs))}${macroFieldInput('fatInput','Fat',macroInputValue(ex.fat))}</div></div><div class="form-field"><div class="form-label">Weight (lb)</div><input type="text" inputmode="decimal" autocomplete="off" class="form-input macro-weight" id="weightInput" aria-label="Weight in pounds" value="${macroInputValue(ex.weight)}"></div><div class="form-field"><div class="form-label">Notes (yoga / boxing / hike miles / sauna / skierg)</div><textarea class="form-textarea" id="notesInput" maxlength="1000">${escapeHTML(ex.notes||'')}</textarea></div><div id="formMacroSummary" class="macro-summary"></div><div id="formMacroError" class="macro-error" role="alert" aria-live="polite"></div><button type="button" class="btn full lg" id="formSaveDay" onclick="saveDailyLog()">SAVE</button><button type="button" class="btn outline sm" onclick="clearMacroDay('form')">Clear numbers</button><button type="button" class="btn full outline" onclick="renderFormsHub()">CANCEL</button></form></div></div>`;document.querySelectorAll('#formContainer .yn-btn').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.key;document.querySelectorAll('#formContainer .yn-btn[data-key="'+CSS.escape(k)+'"]').forEach(x=>x.classList.remove('active'));b.classList.add('active')}));bindMacroInputs('form');refreshMacroSummary('form')}
+function onDailyLogDateChange(){const el=document.getElementById('logDate');const parsed=parseMacroDate(el.value);if(parsed.error){const msg=parsed.error;renderDailyLogForm(todayStr());showMacroError('formMacroError',msg,'logDate');return}renderDailyLogForm(parsed.value)}
+window.saveDailyLog=function(){
+  const read=readMacroEntry(FORM_MACRO_IDS);
+  if(read.error){showMacroError(FORM_MACRO_IDS.error,read.error,read.field);return}
+  if(blankWouldWipeNumbers(read.date,read.values)){showMacroError(FORM_MACRO_IDS.error,'All numbers are blank, so this day was left as it is. Enter a number, or tap Clear numbers to erase them.','caloriesInput');return}
+  showMacroError(FORM_MACRO_IDS.error,'');
+  const checks=store.dailyChecks||[];
+  const saved=commitMacros(FORM_MACRO_IDS.error,()=>{
+    if(!store.daily[read.date])store.daily[read.date]={date:read.date};
+    const d=store.daily[read.date];
+    d.date=read.date;
+    checks.forEach(c=>{
+      const a=document.querySelector('#formContainer .yn-btn[data-key="'+CSS.escape(c.id)+'"].active');
+      d[c.id]=a?a.dataset.val==='true':null;
+    });
+    MACRO_NUM_SPECS.forEach(spec=>{d[spec.key]=read.values[spec.key]});
+    d.weight=read.values.weight;
+    d.notes=read.notes;
+    const yes=checks.filter(c=>d[c.id]===true).length;
+    d.score=checks.length?Math.round(yes*(20/checks.length)):0;
+  });
+  if(!saved)return;
+  showToast('DAY LOGGED');
+  setTimeout(()=>document.querySelector('[data-view="home"]').click(),600);
+};
 function renderCEOForm(){const today=todayStr();const ex=store.ceo[today]||{};const qs=[['seat','Stayed in seat (Visionary)?'],['redirect','Redirect not rescue?'],['thinking','Protected thinking time?'],['coach','Coach not solve?'],['moved','Business moved without me?']];const opts=['Yes','Mostly','Sometimes','No'];document.getElementById('formContainer').innerHTML=`<div class="section"><div class="section-label"><span>CEO Self-Check</span></div><div class="card elev"><form class="form-grid">${qs.map(([k,l])=>`<div class="form-field"><div class="form-label">${l}</div><div class="quad-group">${opts.map(o=>`<button type="button" class="quad-btn ${ex[k]===o?'active':''}" data-q="${k}" data-val="${o}">${o.toUpperCase()}</button>`).join('')}</div></div>`).join('')}<div class="form-field"><div class="form-label">Pulled into execution where?</div><textarea class="form-textarea" id="pulledInput">${escapeHTML(ex.pulled||'')}</textarea></div><div class="form-field"><div class="form-label">Process to reinforce</div><textarea class="form-textarea" id="reinforceInput">${escapeHTML(ex.reinforce||'')}</textarea></div><div class="form-field"><div class="form-label">Autonomous win</div><textarea class="form-textarea" id="ceoWinInput">${escapeHTML(ex.win||'')}</textarea></div><button type="button" class="btn full lg" onclick="saveCEOCheck()">SAVE</button><button type="button" class="btn full outline" onclick="renderFormsHub()">CANCEL</button></form></div></div>`;document.querySelectorAll('.quad-btn').forEach(b=>b.addEventListener('click',()=>{const q=b.dataset.q;document.querySelectorAll(`.quad-btn[data-q="${q}"]`).forEach(x=>x.classList.remove('active'));b.classList.add('active')}))}
 window.saveCEOCheck=()=>{const today=todayStr();const d={date:today};['seat','redirect','thinking','coach','moved'].forEach(q=>{const a=document.querySelector(`.quad-btn[data-q="${q}"].active`);d[q]=a?a.dataset.val:''});d.pulled=document.getElementById('pulledInput').value;d.reinforce=document.getElementById('reinforceInput').value;d.win=document.getElementById('ceoWinInput').value;store.ceo[today]=d;saveAll();showToast("SAVED");setTimeout(()=>document.querySelector('[data-view="home"]').click(),600)};
 function renderFitnessForm(){const today=todayStr();const ex=store.fitness[today]||{};const scales=[['hunger','Hunger (1-5)'],['training','Training (1-5)'],['motivation','Motivation (1-5)'],['sleep','Sleep (1-5)']];document.getElementById('formContainer').innerHTML=`<div class="section"><div class="section-label"><span>Fitness Tracker</span></div><div class="card elev"><form class="form-grid"><div class="form-field"><div class="form-label">Slips</div><textarea class="form-textarea" id="slipsInput">${escapeHTML(ex.slips||'')}</textarea></div><div class="form-field"><div class="form-label">Pumps</div><textarea class="form-textarea" id="pumpsInput">${escapeHTML(ex.pumps||'')}</textarea></div><div class="form-field"><div class="form-label">How felt</div><textarea class="form-textarea" id="feelInput">${escapeHTML(ex.feel||'')}</textarea></div>${scales.map(([k,l])=>`<div class="form-field"><div class="form-label">${l}</div><div class="scale-group scale-1to5">${[1,2,3,4,5].map(n=>`<button type="button" class="scale-btn ${ex[k]===n?'active':''}" data-fk="${k}" data-val="${n}">${n}</button>`).join('')}</div></div>`).join('')}<div class="form-field"><div class="form-label">Mental</div><textarea class="form-textarea" id="mentalInput">${escapeHTML(ex.mental||'')}</textarea></div><div class="form-field"><div class="form-label">Pains</div><textarea class="form-textarea" id="painsInput">${escapeHTML(ex.pains||'')}</textarea></div><button type="button" class="btn full lg" onclick="saveFitness()">SAVE</button><button type="button" class="btn full outline" onclick="renderFormsHub()">CANCEL</button></form></div></div>`;document.querySelectorAll('.scale-btn[data-fk]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.fk;document.querySelectorAll(`.scale-btn[data-fk="${k}"]`).forEach(x=>x.classList.remove('active'));b.classList.add('active')}))}
@@ -2584,7 +2915,7 @@ function renderLOS(){const roles=(store.accountabilityRoles||[]).map(r=>`<div cl
 </div>`}
 
 // ============ HISTORY ============
-function renderHistory(){document.getElementById('historyContent').innerHTML=`<div class="section"><div class="section-label"><span>Daily Logs</span><span class="meta" id="histCount">—</span></div><div id="dailyHistory"></div></div><div class="section"><div class="section-label"><span>Life Op Meetings</span></div><div id="meetingHistory"></div></div><div class="section"><div class="section-label"><span>Data Management</span></div><div class="card"><p style="color:var(--text-dim);font-size:13px;margin-bottom:14px">All data is local. Export to back up or sync.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn outline" onclick="exportData()">EXPORT BACKUP</button><button class="btn outline" onclick="document.getElementById('importFile').click()">IMPORT</button><input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)"></div></div></div>`;const dd=Object.keys(store.daily).sort().reverse();document.getElementById('histCount').textContent=dd.length?`${dd.length}`:'—';const dh=document.getElementById('dailyHistory');if(!dd.length)dh.innerHTML=`<div class="empty">No daily logs.</div>`;else dh.innerHTML=dd.slice(0,30).map(d=>`<div class="history-row"><div class="history-date">${new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div><div class="history-score">${store.daily[d].score||0}</div></div>`).join('');const md=Object.keys(store.meeting||{}).sort().reverse();const mh=document.getElementById('meetingHistory');if(!md.length)mh.innerHTML=`<div class="empty">No meetings.</div>`;else mh.innerHTML=md.slice(0,12).map(d=>{const r=store.meeting[d];const ov=store.domainNames.length&&r.scores?(store.domainNames.reduce((s,dn)=>s+(r.scores[dn.toLowerCase()]||0),0)/store.domainNames.length).toFixed(1):0;return`<div class="history-row"><div><div class="history-date">${new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>${r.win?`<div style="font-size:11px;color:var(--text-dim);margin-top:2px">${escapeHTML(r.win.slice(0,50))}</div>`:''}</div><div class="history-score">${ov}</div></div>`}).join('')}
+function renderHistory(){document.getElementById('historyContent').innerHTML=`<div class="section"><div class="section-label"><span>Daily Logs</span><span class="meta" id="histCount">—</span></div><div id="dailyHistory"></div></div><div class="section"><div class="section-label"><span>Life Op Meetings</span></div><div id="meetingHistory"></div></div><div class="section"><div class="section-label"><span>Data Management</span></div><div class="card"><p style="color:var(--text-dim);font-size:13px;margin-bottom:14px">All data is local. Export to back up or sync.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn outline" onclick="exportData()">EXPORT BACKUP</button><button class="btn outline" onclick="document.getElementById('importFile').click()">IMPORT</button><input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)"></div></div></div>`;const dd=Object.keys(store.daily).sort().reverse();document.getElementById('histCount').textContent=dd.length?`${dd.length}`:'—';const dh=document.getElementById('dailyHistory');if(!dd.length)dh.innerHTML=`<div class="empty">No daily logs.</div>`;else dh.innerHTML=dd.slice(0,30).map(d=>{const log=store.daily[d]||{};const bits=formatMacroHistory(log);return `<div class="history-row"><div class="history-main"><div class="history-date">${new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>${bits?`<div class="history-macros">${escapeHTML(bits)}</div>`:''}</div><div class="history-score">${log.score||0}</div></div>`}).join('');const md=Object.keys(store.meeting||{}).sort().reverse();const mh=document.getElementById('meetingHistory');if(!md.length)mh.innerHTML=`<div class="empty">No meetings.</div>`;else mh.innerHTML=md.slice(0,12).map(d=>{const r=store.meeting[d];const ov=store.domainNames.length&&r.scores?(store.domainNames.reduce((s,dn)=>s+(r.scores[dn.toLowerCase()]||0),0)/store.domainNames.length).toFixed(1):0;return`<div class="history-row"><div><div class="history-date">${new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>${r.win?`<div style="font-size:11px;color:var(--text-dim);margin-top:2px">${escapeHTML(r.win.slice(0,50))}</div>`:''}</div><div class="history-score">${ov}</div></div>`}).join('')}
 
 // ============ CONSTITUTION ============
 // Default constitution sections (used if person.constitutionSections is null)
